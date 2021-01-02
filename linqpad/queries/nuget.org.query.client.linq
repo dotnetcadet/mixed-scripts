@@ -3,11 +3,9 @@
   <Namespace>System.Text.Json</Namespace>
   <Namespace>System.Net.Http</Namespace>
   <Namespace>System.Threading.Tasks</Namespace>
+  <Namespace>System.Net</Namespace>
+  <Namespace>System.Net.Http.Headers</Namespace>
 </Query>
-
-using System.Net;
-using System.Net.Http.Headers;
-
 
 async Task Main()
 {
