@@ -88,7 +88,7 @@ void Main()
 		}
 	}
 	
-	mapCollection.ForEach(x=>{
+	mapCollection.ForEach(x=> {
 		Console.WriteLine(x.Source + " ---> " + x.Destination);
 	});
 	

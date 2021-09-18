@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Azure Event Grid Function</Title>
+			<Shortcut>eventfunc</Shortcut>
+			<Description>Code snippet for an automatically implemented EventGrid Trigger Functions</Description>
+			<Author>Asimalign LLC</Author>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+                    <ID>function</ID>
+					<ToolTip>Function Name</ToolTip>
+					<Default>function</Default>
+                </Literal>
+                <Literal>
+                    <ID>method</ID>
+					<ToolTip>Method Name</ToolTip>
+					<Default>Run</Default>
+                </Literal>
+			</Declarations>
+			
+            <Code Language="csharp"><![CDATA[
+                [FunctionName("$function$")]
+				public async Task $method$(
+					[EventGridTrigger] EventGridEvent message, 
+					ILogger logger)
+				{
+					try
+					{
+						logger.LogInformation(message.Data.ToString());
+					}
+					catch(Exception exception)
+					{
+
+					}
+				}
+            ]]>
+            </Code>
+			<Imports>
+				<Import>
+					<Namespace>System</Namespace>
+				</Import>
+				<Import>
+					<Namespace>System.Threading.Tasks</Namespace>
+				</Import>
+				<Import>
+					<Namespace>Microsoft.Azure.WebJobs</Namespace>
+				</Import>
+				<Import>
+					<Namespace>Microsoft.Extensions.Logging</Namespace>
+				</Import>
+				<Import>
+					<Namespace>Microsoft.Azure.EventGrid.Models</Namespace>
+				</Import>
+				<Import>
+				<Namespace>Microsoft.Azure.WebJobs.Extensions.EventGrid</Namespace>
+				</Import>
+			</Imports>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>

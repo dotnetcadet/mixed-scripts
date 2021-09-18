@@ -1,15 +1,211 @@
-<Query Kind="Program" />
+<Query Kind="Program">
+  <NuGetReference>System.IO.Compression</NuGetReference>
+  <NuGetReference>System.IO.FileSystem.Primitives</NuGetReference>
+  <NuGetReference>System.IO.MemoryMappedFiles</NuGetReference>
+  <Namespace>System.Threading.Tasks</Namespace>
+  <Namespace>System.IO.MemoryMappedFiles</Namespace>
+  <Namespace>System.Runtime.InteropServices</Namespace>
+  <Namespace>System.Text.Json</Namespace>
+</Query>
 
-void Main()
+
+
+
+
+internal const uint headerPosition = 0;
+
+
+// Writing String to Mapped File: https://stackoverflow.com/questions/10806518/write-string-data-to-memorymappedfile
+
+async unsafe Task Main()
 {
-	var tree = new BTree<long, long>(3);
+	var fileName = "commentator1";
+	var filePath = string.Format(@"C:\Users\ccrawford\source\data\{0}.adf", fileName);
+	var fileCapacity = GetMegaBytes(8);
 	
-	tree.Insert(100001,589203);
-	tree.Insert(100001,589203);
+	if (File.Exists(filePath))
+	{
+		var fileInfo = new FileInfo(filePath);
+		fileCapacity = (fileInfo.Length / GetMegaBytes(8)) + GetMegaBytes(8);
+	}
+	
+	
+	using(var mappedFile = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, fileName, fileCapacity))
+	{
+		
+		var size = sizeof(FileBlock);
+		
+		//using(var accessor = mappedFile.CreateViewAccessor(0, 
+		
+		
+//		var header = new Header();
+//		
+//		using(var accessor = mappedFile.CreateViewAccessor(0, headerSize))
+//		{
+//			header.SetFileType(FileType.RDBMS);
+//			header.SetFileSize(545684);
+//			header.SetDataBlockAddress(686547);
+//			header.SetIndexBlockAddress(96868);
+//			
+//			
+//			accessor.Write<Header>(0, ref header);
+//			
+//			Header test;
+//			
+//		 	accessor.Read<Header>(0, out test);
+//
+//			var data = JsonSerializer.Serialize(test, new JsonSerializerOptions()
+//			{
+//			WriteIndented = true,
+//				IncludeFields = true
+//			});
+//			
+//			Console.Write(data);
+//			
+			
+		
+			
+			
+//		}
+
+
+		//using(var bodyAccessor = mappedFile.CreateViewAccessor(GetGigaBytes(256), 
+	}
+}
+
+
+public enum FileType: ushort
+{
+	RDBMS = 1,
+	DocumentDb = 2
+}
+
+
+public struct FileHeader
+{
+	public ulong FileSize;
+	public FileType FileType;
+	public ulong IndexBlockAddress;
+	public ulong DataBlockAddress;
+	
+	
+	public void SetFileType(FileType type) =>
+		FileType = type;
+	
+	public void SetFileSize(ulong size) => 
+		FileSize = size;
+		
+	public void SetIndexBlockAddress(ulong address) =>
+		IndexBlockAddress = address;
+		
+	public void SetDataBlockAddress(ulong address) =>
+		DataBlockAddress = address;
 	
 }
 
 
+public struct FileBlock
+{
+	public ulong Pages;
+	
+	
+	public FilePage[] GetPages()
+	{
+		
+	}
+}
+
+
+public struct FilePage
+{
+	public ushort Header;
+	public ushort Body;
+	public ushort Offset;
+}
+
+
+public class Column
+{
+	
+}
+
+public struct FilePageRow
+{
+	public FilePageColumn[] Columns;
+}
+
+public enum DataType: ushort
+{
+	Varcahr, 
+	Char,
+	Boolean
+}
+
+public struct FilePageColumn
+{
+	public DataType DataType;
+	
+}
+
+
+
+namespace System.IO.MemoryMappedFiles
+{
+	public static class MemoryMappedFileExtensions
+	{
+		
+		
+	
+		
+		
+		public static void WriteString(this MemoryMappedViewAccessor accessor, long position, string value)
+		{
+			var buffer = Encoding.UTF8.GetBytes(value);
+			
+			// let write a the length of the buffer first before writing the actual string
+			accessor.Write(position, (uint)buffer.Length);
+			
+			// let's now write the array of char from the string
+			accessor.WriteArray(position + 2, buffer, 0, buffer.Length);			
+		}
+		
+		
+		public static string ReadString(this MemoryMappedViewAccessor accessor, long position)
+		{
+			// First lets read the length of an int16 fro mthe starting position
+			// This should be the same length of the buffer when the string was written to the file
+			var length = accessor.ReadInt16(position);
+			
+			// Lets now create a buffer of the length
+			var buffer = new byte[length];
+			
+			// Now lets read bytes into the buffer 
+			accessor.ReadArray(position + 2, buffer, 0, buffer.Length);
+			
+			// Now lets convert the byte array into a string
+			// hoepfully there is no data conversion issues
+			return Encoding.UTF8.GetString(buffer);
+		}
+	}
+	
+}
+
+
+
+
+
+
+
+public long GetMegaBytes(long megabytes) => 
+	megabytes * 1000000;
+	
+	
+public long GetGigaBytes(long gigabytes) => 
+	GetMegaBytes(1000) * gigabytes;
+
+
+
+#region btree.index
 
 internal class BTreeEntry<TKey, TPointer> : IEquatable<BTreeEntry<TKey, TPointer>>
 {
@@ -62,7 +258,6 @@ internal class BTreeNode<TKey, TPointer>
 		}
 	}
 }
-
 
 internal class BTree<TKey, TPointer> where TKey : IComparable<TKey>
 {
@@ -398,3 +593,4 @@ internal class BTree<TKey, TPointer> where TKey : IComparable<TKey>
 		this.InsertNonFull(node.Children[positionToInsert], newKey, newPointer);
 	}
 }
+#endregion

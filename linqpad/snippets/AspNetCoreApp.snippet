@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>AspNetCoreApp</Title>
+      <Description>AspNetCoreApp</Description>
+      <Shortcut>AspNetCoreApp</Shortcut>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Imports>
+        <Import>
+          <Namespace>Microsoft.AspNetCore.Builder</Namespace>
+        </Import>
+        <Import>
+          <Namespace>Microsoft.AspNetCore.Hosting</Namespace>
+        </Import>
+        <Import>
+          <Namespace>Microsoft.AspNetCore.Mvc</Namespace>
+        </Import>
+        <Import>
+          <Namespace>Microsoft.Extensions.Configuration</Namespace>
+        </Import>
+        <Import>
+          <Namespace>Microsoft.Extensions.DependencyInjection</Namespace>
+        </Import>
+        <Import>
+          <Namespace>Microsoft.Extensions.Hosting</Namespace>
+        </Import>
+        <Import>
+          <Namespace>Microsoft.Extensions.Logging</Namespace>
+        </Import>
+        <Import>
+          <Namespace>Microsoft.Extensions.Options</Namespace>
+        </Import>
+        <Import>
+          <Namespace>System.Threading.Tasks</Namespace>
+        </Import>
+      </Imports>
+      <Code Language="CSharp"><![CDATA[public static void Main(string[] args)
+{
+	CreateHost(args).Build().Run();
+}
+
+
+public static IHostBuilder CreateHost(string[] args) =>
+	Host.CreateDefaultBuilder(args)
+		.ConfigureWebHostDefaults(configure=>
+		{
+			configure.UseKestrel();
+			configure.UseContentRoot(Directory.GetCurrentDirectory());
+			configure.UseIISIntegration();
+			configure.UseStartup<Startup>();
+			configure.UseUrls("http://localhost:8080");
+		});
+		
+		
+public class Startup
+{
+	public Startup(IConfiguration configuration)
+	{
+		Configuration = configuration;
+	}
+	
+	public IConfiguration Configuration { get; }
+	
+	public void ConfigureServices(IServiceCollection services)
+	{
+		services.AddControllers();
+	}
+	
+	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+	{
+		app.UseHttpsRedirection();
+		app.UseRouting();
+		app.UseEndpoints(endpoints=>
+		{
+			endpoints.MapControllers();
+		});
+	}
+}
+
+
+[ApiController]
+public class SampleController : ControllerBase
+{
+	
+	public SampleController()
+	{
+		
+	}
+	
+	
+	[HttpGet]
+	[Route("api/[controller]/Hello")]
+	public async Task<IActionResult> GetHelloAsync()
+	{
+		return new OkObjectResult("Sample Hello");
+	}
+}]]></Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

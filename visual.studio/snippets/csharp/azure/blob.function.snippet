@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>Azure Storage Blob Function</Title>
+			<Shortcut>blobfunc</Shortcut>
+			<Description>Code snippet for an automatically implemented Blob Trigger Functions</Description>
+			<Author>Asimalign LLC</Author>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+                    <ID>name</ID>
+					<ToolTip>Function Name</ToolTip>
+					<Default>function1</Default>
+                </Literal>
+                <Literal>
+                    <ID>action</ID>
+					<ToolTip>Action Name</ToolTip>
+					<Default>Run</Default>
+                </Literal>
+				<Literal>
+					<ID>path</ID>
+					<ToolTip>Path to Blob</ToolTip>
+					<Default>blob path</Default>
+				</Literal>
+				<Literal>
+					<ID>connection</ID>
+					<ToolTip>The Connection string to the Service Bus Namespace</ToolTip>
+					<Default>connection string</Default>
+				</Literal>
+			</Declarations>
+			
+            <Code Language="csharp"><![CDATA[
+                [FunctionName("$name$")]
+                public void $action$(
+                    [BlobTrigger("$path$/{name}", Connection = "$connection$")] Stream blobStream, 
+                    string name, 
+                    ILogger logger)
+                {
+                    try
+                    {
+
+                    }
+                    catch(Exception exception)
+                    {
+
+                    }
+                }
+            ]]>
+            </Code>
+			<Imports>
+				<Import>
+					<Namespace>System</Namespace>
+				</Import>
+				<Import>
+					<Namespace>System.IO</Namespace>
+				</Import>
+				<Import>
+					<Namespace>Microsoft.Azure.WebJobs</Namespace>
+				</Import>
+				<Import>
+					<Namespace>Microsoft.Extensions.Logging</Namespace>
+				</Import>
+			</Imports>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>
