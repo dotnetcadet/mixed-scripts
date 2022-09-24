@@ -6,93 +6,69 @@
 </Query>
 
 
-private string _database = "ErpCore";
-private string _container = "Employee";
+
 private string _connection = "";
 
 
 async Task Main()
 {
+	var tasks = new List<Task<ItemResponse<object>>>();
 	var client = new CosmosClient(_connection, new CosmosClientOptions()
 	{
+		AllowBulkExecution = true,
 		SerializerOptions = new CosmosSerializationOptions()
 		{
 			IgnoreNullValues = true,
 			PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
 		}
 	});
-	
-	var container = client.GetContainer(_database, _container);
-	
-	var queryable = container.GetItemLinqQueryable<Employee>()
-		.Select( x => new 
+
+	var container1 = client.GetContainer("", "");
+	var container2 = client.GetContainer("", "");
+	long pageNumber = 0;
+	while (true)
+	{
+		using (var iterator = container1.GetItemQueryIterator<object>($"select * From c Offset {pageNumber * 500} Limit 500"))
 		{
-			FirstName = x.FirstName,
-			Details = new 
+			while (iterator.HasMoreResults)
 			{
-				Age = x.Details.Age,
-				Addresses = x.Details.Addresses.Select(b=> new 
+				var items = await iterator.ReadNextAsync();
+
+				foreach (var item in items)
 				{
-					b.Street	
-				})
-			}	
-		});
-		
-	var def = queryable.ToQueryDefinition();
-		
-	using (var iterator = queryable.ToFeedIterator())
-	{
-		var results = await iterator.ReadNextAsync();
-		results.Resource.Dump();
+					try
+					{
+						tasks.Add(container2.UpsertItemAsync<object>(item));
+
+						if (tasks.Count >= 500)
+						{
+							var results = await Task.WhenAll(tasks);
+
+							var failures = results
+								.Where(x => ((int)x.StatusCode) < 200 || ((int)x.StatusCode) > 299)
+								?.Count();
+
+							if (failures is not null)
+							{
+								failures.Dump();
+							}
+
+							tasks.Clear();
+						}
+					}
+					catch (Exception exception)
+					{
+						continue;
+					}
+				}
+			}
+		}
+		pageNumber++;
 	}
-}
-
-
-
-
-public class Employee
-{
-	public string Id
-	{
-		get => EmployeeId.ToString();
-		set => EmployeeId = Guid.Parse(value);
-	}
-
-	public string YearStarted { get; set; } = DateTime.Now.Year.ToString();
-	public Guid EmployeeId { get; set; } = Guid.NewGuid();
-	public string FirstName { get; set; }
-	public string LastName { get; set; }
-	public DateTime Birthdate { get; set; }
-	public EmployeeDetails Details { get; set; }
-	public IEnumerable<EmployeeAddress> Addresses { get; set; }
 	
+
+
 }
-
-public class EmployeeDetails
-{
-	public string Ssn { get; set; }
-	public string Age { get; set; }
-	public IEnumerable<EmployeeAddress> Addresses { get; set; }
-	
-}
-
-public class EmployeeAddress
-{
-	public string Street { get; set; }
-	public string Apt { get; set; }
-	public string Unit { get; set; }
-	public string City { get; set; }
-	public string StateOrRegion { get; set; }
-	public string County { get; set; }
-	public string Country { get; set; }
-	public string CountryCode { get; set; }
-}
-
-
-
-
-
-
 
 
 

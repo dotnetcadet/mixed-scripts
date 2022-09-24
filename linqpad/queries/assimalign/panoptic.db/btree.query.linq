@@ -36,11 +36,17 @@ void Main()
 //	tree.Dump();
 //	
 	
-	
+	/*
+		JSON Data Page
+		
+		| id | { "firstName": "Chase", "lasatName"} |
+		| id | { "firstName": "Chase", "lasatName"} |
+		| id | { "firstName": "Chase", "lasatName"} |
+	*/
 
 	
 	
-	using(MemoryStream memoryStream = new MemoryStream())
+	using (MemoryStream memoryStream = new MemoryStream())
 	{
 		for(int i = 0;i < 5000; i++)
 		{
@@ -102,15 +108,9 @@ public class Person
 internal class BTreeEntry<TKey, TPointer> : IEquatable<BTreeEntry<TKey, TPointer>>
 {
 	public TKey Key { get; set; }
-
 	public TPointer Pointer { get; set; }
-
-	public bool Equals(BTreeEntry<TKey, TPointer> other)
-	{
-		return this.Key.Equals(other.Key) && this.Pointer.Equals(other.Pointer);
-	}
+	public bool Equals(BTreeEntry<TKey, TPointer> other) => this.Key.Equals(other.Key) && this.Pointer.Equals(other.Pointer);
 }
-
 internal class BTreeNode<TKey, TPointer>
 {
 	private int degree;
@@ -123,32 +123,10 @@ internal class BTreeNode<TKey, TPointer>
 	}
 
 	public List<BTreeNode<TKey, TPointer>> Children { get; set; }
-
 	public List<BTreeEntry<TKey, TPointer>> Entries { get; set; }
-
-	public bool IsLeaf
-	{
-		get
-		{
-			return this.Children.Count == 0;
-		}
-	}
-
-	public bool HasReachedMaxEntries
-	{
-		get
-		{
-			return this.Entries.Count == (2 * this.degree) - 1;
-		}
-	}
-
-	public bool HasReachedMinEntries
-	{
-		get
-		{
-			return this.Entries.Count == this.degree - 1;
-		}
-	}
+	public bool IsLeaf => this.Children.Count == 0;
+	public bool HasReachedMaxEntries => this.Entries.Count == (2 * this.degree) - 1;
+	public bool HasReachedMinEntries => this.Entries.Count == this.degree - 1;
 }
 
 internal class BTree<TKey, TPointer> where TKey : IComparable<TKey>
@@ -166,9 +144,7 @@ internal class BTree<TKey, TPointer> where TKey : IComparable<TKey>
 	}
 
 	public BTreeNode<TKey, TPointer> Root { get; private set; }
-
 	public int Degree { get; private set; }
-
 	public int Height { get; private set; }
 
 	/// <summary>

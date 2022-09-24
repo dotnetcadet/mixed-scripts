@@ -1,12 +1,8 @@
 <email>
-    <to-single>
+	<to-single>
         @foreach(var email in @Model.Emails)
         {
             <email>@email</email>
         }
-    </to-single>>
-    <subject>@Model.Subject</subject>
-    <body>@Model.Body</body>
-    <from>@Model.From</from>
-    <is-body-html>false</is-body-html>
-</email>
+    </to-single>&gt;
+    <subject>@Model.Subject</subject><body>@Model.Body</body><from>@Model.From</from><is-body-html>false</is-body-html></email>

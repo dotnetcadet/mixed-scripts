@@ -13,15 +13,12 @@ public string MyName = "Hi, My Name is @Model.Name";
 
 void Main()
 {
+	var path = @"";
+	var content = File.ReadAllText(path);
 	// Create the Razor Engine to Compile and Run Razor Syntax
 	var engine = RazorEngine.Create();
 	
 	// Build the Razor Syntax into Byte Code
-	var template = engine.Build(MyName);
+	var template = engine.Build(content);
 	
-	// Write Token Replacement Output
-	var outputName = template.Run(new
-	{
-		Name = "Chase Crawford"
-	}).Dump();
 }

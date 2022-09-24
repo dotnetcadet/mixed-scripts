@@ -18,12 +18,6 @@ public static string Authority = $"https://login.microsoftonline.com/{TenantId}/
 public static string DefaultScope = "https://graph.microsoft.com/.default";
 
 
-public class GraphWrapper<T>
-{
-	public IEnumerable<T> value { get; set; }
-}
-
-
 async Task Main()
 {
 	var appClient = ConfidentialClientApplicationBuilder.Create(ClientId)
@@ -31,149 +25,28 @@ async Task Main()
 		.WithAuthority(Authority)
 		.Build();
 		
-	var graphClient = new GraphServiceClient(new GraphAuthProvider(appClient), new HttpProvider());
+	var client = new GraphServiceClient(new GraphAuthProvider(appClient), new HttpProvider());
 	
 	//----------------------------------------------------------------------//
-	IEnumerable<User> users = null;
-	var batchContent = new BatchRequestContent(new[]
-	{
-		new BatchRequestStep(Guid.NewGuid().ToString(),graphClient.Users.Request().Expand("appRoleAssignments").GetHttpRequestMessage()),
-		new BatchRequestStep(Guid.NewGuid().ToString(),graphClient.Users.Request().Expand("memberOf").GetHttpRequestMessage()),
-		new BatchRequestStep(Guid.NewGuid().ToString(),graphClient.Users.Request().Expand("Calendars").GetHttpRequestMessage()),
-		new BatchRequestStep(Guid.NewGuid().ToString(),graphClient.Users.Request().Expand("Events").GetHttpRequestMessage()),
-		new BatchRequestStep(Guid.NewGuid().ToString(),graphClient.Users.Request().Expand("RegisteredDevices").GetHttpRequestMessage()),
-		new BatchRequestStep(Guid.NewGuid().ToString(),graphClient.Users.Request().Expand("ScopedRoleMemberOf").GetHttpRequestMessage()),
-		new BatchRequestStep(Guid.NewGuid().ToString(),graphClient.Users.Request().Expand("OtherMails").GetHttpRequestMessage()),
-	});
-	
-	var combiner = Combiner<User>.Where((x,y) => x.Id == y.Id);
-	var batchResponse = await graphClient.Batch.Request().PostAsync(batchContent);
-	var responses = await batchResponse.GetResponsesAsync();
-	
-	//responses.Dump();
-	
-	
-	foreach(var response in responses.Where(x=>x.Value.IsSuccessStatusCode == true))
-	{
-		var content = await response.Value.Content.ReadAsStringAsync();
+
+	var results = client.Users["@eastdilsecured.com"]
+		.CalendarView
+		.Request(new Option[]
+		{
+			new QueryOption("startdatetime", "2022-01-13T19:00:00-08:00"),
+			new QueryOption("enddatetime", "2022-01-14T19:00:00-08:00")
+		})
+		.Top(200)
+		.Select("subject, categories, end")
+		.GetAsync()
+		.GetAwaiter()
+		.GetResult();
 		
-		if(users == null)
-			users = JsonConvert.DeserializeObject<GraphWrapper<User>>(content).value;
-		else
-			combiner.Merge(ref users, JsonConvert.DeserializeObject<GraphWrapper<User>>(content).value);
-	}
+		
+		
+	System.IO.File.WriteAllText(@"C:\source\temp\temp.json", Newtonsoft.Json.JsonConvert.SerializeObject(results));
+
 	
-}
-
-public class Combiner<TData> : IEqualityComparer<TData>
-{
-	private string PropertyKey;
-	private Func<TData, TData, bool> Compare;
-
-	protected Combiner() { }
-
-	private Combiner(Func<TData, TData, bool> compare, string propertyKey)
-	{
-		Compare = compare;
-		PropertyKey = propertyKey;
-	}
-
-	public static Combiner<TData> Where(Expression<Func<TData, TData, bool>> comparison)
-	{
-		var propertyKey = string.Empty;
-
-		if (comparison is LambdaExpression)
-		{
-			var expression = comparison.Body as BinaryExpression;
-
-			if (expression.Left.NodeType == ExpressionType.MemberAccess)
-			{
-				var propertyInfo = ((MemberExpression)expression.Left).Member as PropertyInfo;
-				propertyKey = propertyInfo.Name;
-			}
-		}
-
-		return new Combiner<TData>(comparison.Compile(), propertyKey);
-	}
-
-	public IEnumerable<TData> Merge(IEnumerable<TData> target, IEnumerable<TData> source)
-	{
-		return target.Union(source, this);
-	}
-
-	public void Merge(ref IEnumerable<TData> target, IEnumerable<TData> source)
-	{
-		target.Union(source, this);
-	}
-
-	public static TData Merge(TData target, TData source)
-	{
-		var type = typeof(TData);
-
-		foreach (var property in type.GetProperties())
-		{
-			if (property.CanRead && property.CanWrite)
-			{
-				var value = property.GetValue(source, null);
-
-				if (value != null)
-					property.SetValue(target, value);
-			}
-		}
-
-		return target;
-	}
-
-
-	public bool Equals(TData? left, TData? right)
-	{
-		if (left == null || right == null)
-			return false;
-
-		return Compare.Invoke(left, right);
-	}
-
-
-	public int GetHashCode(TData obj)
-	{
-		var property = typeof(TData).GetProperty(PropertyKey);
-
-		if (property.PropertyType == typeof(int))
-		{
-			return (int)property.GetValue(obj);
-		}
-
-		var code = HashCode.Combine<string>((string)property.GetValue(obj));
-
-		return code;
-	}
-}
-
-public void DumpToFile(string content, string extension)
-{
-	var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-	var path = Path.Combine(folder, $"graph.data{extension}");
-	using (FileStream stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-	{
-		using(StreamWriter writer = new StreamWriter(stream))
-		{
-			writer.Write(content);
-			writer.Flush();
-		}
-	}
-}
-
-public void MergeObjects<T>(ref T target, T source)
-{
-	var type = typeof(T);
-	var properties = type.GetProperties().Where(prop => prop.CanRead && prop.CanWrite);
-
-	foreach (var property in properties)
-	{
-		var value = property.GetValue(source, null);
-		if (value != null)
-			property.SetValue(target, value, null);
-	}
 }
 
 
